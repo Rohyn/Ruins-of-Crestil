@@ -1,4 +1,5 @@
 using ROC.Networking.Characters;
+using ROC.Networking.Conditions;
 using ROC.Networking.Sessions;
 using Unity.Netcode;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace ROC.Networking.Interactions
         [Header("References")]
         [SerializeField] private PlayerInteractionSelector interactionSelector;
         [SerializeField] private PlayerLookController lookController;
+        [SerializeField] private NetworkPlayerConditionState conditionState;
 
         [Header("Input")]
         [SerializeField] private Key interactKey = Key.E;
@@ -30,6 +32,11 @@ namespace ROC.Networking.Interactions
             {
                 lookController = GetComponent<PlayerLookController>();
             }
+
+            if (conditionState == null)
+            {
+                conditionState = GetComponent<NetworkPlayerConditionState>();
+            }
         }
 
         private void Update()
@@ -46,6 +53,12 @@ namespace ROC.Networking.Interactions
 
             if (!WasPressedThisFrame(interactKey))
             {
+                return;
+            }
+
+            if (conditionState != null && conditionState.IsAnchored.Value)
+            {
+                RequestReleaseAnchor();
                 return;
             }
 
@@ -95,6 +108,22 @@ namespace ROC.Networking.Interactions
             {
                 Debug.Log($"[PlayerInteractor] Requested interaction with '{target.name}'.", target);
             }
+        }
+
+        private void RequestReleaseAnchor()
+        {
+            NetworkAnchorRequestor requestor =
+                ClientSessionProxy.Local != null
+                    ? ClientSessionProxy.Local.GetComponent<NetworkAnchorRequestor>()
+                    : null;
+
+            if (requestor == null)
+            {
+                Debug.LogWarning("[PlayerInteractor] No NetworkAnchorRequestor found on local session proxy.", this);
+                return;
+            }
+
+            requestor.RequestReleaseAnchor();
         }
 
         private static bool WasPressedThisFrame(Key key)

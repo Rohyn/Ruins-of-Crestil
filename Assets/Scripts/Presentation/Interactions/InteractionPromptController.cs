@@ -1,3 +1,4 @@
+using ROC.Networking.Conditions;
 using ROC.Networking.Interactions;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -63,6 +64,13 @@ namespace ROC.Presentation.Interactions
 
         private void Update()
         {
+            if (NetworkPlayerConditionState.Local != null &&
+                NetworkPlayerConditionState.Local.IsAnchored.Value)
+            {
+                ShowAnchorPrompt();
+                return;
+            }
+
             if (_boundSelector == null)
             {
                 if (Time.time >= _nextSelectorSearchTime)
@@ -162,6 +170,29 @@ namespace ROC.Presentation.Interactions
                 : string.Empty;
 
             return $"{keyText}{promptSeparator}{interactionText}";
+        }
+
+        private void ShowAnchorPrompt()
+        {
+            if (promptView == null)
+            {
+                return;
+            }
+
+            string exitPrompt = NetworkPlayerConditionState.Local.AnchorExitPrompt.Value.ToString();
+
+            if (string.IsNullOrWhiteSpace(exitPrompt))
+            {
+                exitPrompt = "Release";
+            }
+
+            promptView.Show($"{interactKey}{promptSeparator}{exitPrompt}");
+
+            Vector2 screenPoint = new(
+                Screen.width * 0.5f,
+                Screen.height * 0.58f);
+
+            promptView.SetScreenPosition(screenPoint, null);
         }
 
         private void UpdatePromptPosition()

@@ -1,8 +1,8 @@
+using ROC.Networking.Conditions;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Controls;
 
 namespace ROC.Networking.Characters
 {
@@ -14,6 +14,7 @@ namespace ROC.Networking.Characters
     {
         [Header("References")]
         [SerializeField] private PlayerLookController lookController;
+        [SerializeField] private NetworkPlayerConditionState conditionState;
 
         [Header("Movement")]
         [SerializeField, Min(0f)] private float walkSpeed = 4.5f;
@@ -81,6 +82,11 @@ namespace ROC.Networking.Characters
             {
                 lookController = GetComponent<PlayerLookController>();
             }
+
+            if (conditionState == null)
+            {
+                conditionState = GetComponent<NetworkPlayerConditionState>();
+            }
         }
 
         public override void OnNetworkSpawn()
@@ -94,7 +100,7 @@ namespace ROC.Networking.Characters
 
             if (IsOwner)
             {
-                _lastSentYaw = NormalizeYaw(transform.eulerAngles.y);
+                _lastSentYaw = GetOwnerRequestedYaw();
             }
         }
 
@@ -134,6 +140,20 @@ namespace ROC.Networking.Characters
             }
         }
 
+        public void ClearServerMotionState()
+        {
+            if (!IsServer)
+            {
+                return;
+            }
+
+            _serverMoveInput = Vector2.zero;
+            _serverRunHeld = false;
+            _verticalVelocity = 0f;
+            _jumpBufferExpiresAt = -999f;
+            _lastGroundedTime = -999f;
+        }
+
         private void CollectOwnerInput()
         {
             bool gameplayInputAllowed =
@@ -147,21 +167,17 @@ namespace ROC.Networking.Characters
                 return;
             }
 
-            _localMoveInput = ReadMoveInput();
-            _localRunHeld = IsPressed(runKey);
+            bool blocksMovement = conditionState != null && conditionState.BlocksMovement;
+            bool blocksSprint = conditionState != null && conditionState.BlocksSprint;
+            bool blocksJump = conditionState != null && conditionState.BlocksJump;
 
-            if (WasPressedThisFrame(jumpKey))
+            _localMoveInput = blocksMovement ? Vector2.zero : ReadMoveInput();
+            _localRunHeld = !blocksSprint && IsPressed(runKey);
+
+            if (!blocksJump && WasPressedThisFrame(jumpKey))
             {
                 _localJumpQueued = true;
             }
-        }
-
-        private float GetOwnerRequestedYaw()
-        {
-            return NormalizeYaw(
-                lookController != null
-                    ? lookController.YawDegrees
-                    : transform.eulerAngles.y);
         }
 
         private void PushOwnerInputToServer()
@@ -279,6 +295,23 @@ namespace ROC.Networking.Characters
                 _serverRunHeld = false;
             }
 
+            PlayerControlBlockFlags blocks = conditionState != null
+                ? conditionState.ControlBlocks.Value
+                : PlayerControlBlockFlags.None;
+
+            if ((blocks & PlayerControlBlockFlags.Movement) != 0)
+            {
+                _serverMoveInput = Vector2.zero;
+            }
+
+            if ((blocks & PlayerControlBlockFlags.Sprint) != 0)
+            {
+                _serverRunHeld = false;
+            }
+
+            bool blocksJump = (blocks & PlayerControlBlockFlags.Jump) != 0;
+            bool blocksGravity = (blocks & PlayerControlBlockFlags.Gravity) != 0;
+
             bool grounded = _characterController.isGrounded;
 
             if (grounded)
@@ -294,14 +327,21 @@ namespace ROC.Networking.Characters
             bool jumpBuffered = Time.time <= _jumpBufferExpiresAt;
             bool canUseCoyoteJump = Time.time <= _lastGroundedTime + coyoteTime;
 
-            if (jumpBuffered && canUseCoyoteJump && jumpHeight > 0f)
+            if (!blocksJump && jumpBuffered && canUseCoyoteJump && jumpHeight > 0f)
             {
                 _verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
                 _jumpBufferExpiresAt = -999f;
                 _lastGroundedTime = -999f;
             }
 
-            _verticalVelocity += gravity * deltaTime;
+            if (blocksGravity)
+            {
+                _verticalVelocity = 0f;
+            }
+            else
+            {
+                _verticalVelocity += gravity * deltaTime;
+            }
 
             Vector3 horizontalDirection = CalculateMoveWorldFromInputAndYaw(
                 _serverMoveInput,
@@ -393,6 +433,14 @@ namespace ROC.Networking.Characters
                 : ClampAxes(input, -1f, 1f);
         }
 
+        private float GetOwnerRequestedYaw()
+        {
+            return NormalizeYaw(
+                lookController != null
+                    ? lookController.YawDegrees
+                    : transform.eulerAngles.y);
+        }
+
         private void ReplicateGameplayYawIfNeeded()
         {
             if (!IsServer)
@@ -427,7 +475,7 @@ namespace ROC.Networking.Characters
                 return false;
             }
 
-            KeyControl control = keyboard[key];
+            var control = keyboard[key];
             return control != null && control.isPressed;
         }
 
@@ -445,7 +493,7 @@ namespace ROC.Networking.Characters
                 return false;
             }
 
-            KeyControl control = keyboard[key];
+            var control = keyboard[key];
             return control != null && control.wasPressedThisFrame;
         }
 

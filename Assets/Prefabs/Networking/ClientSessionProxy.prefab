@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: -8335176027247071364}
   - component: {fileID: -741327175963800778}
   - component: {fileID: -9107312015112762939}
+  - component: {fileID: 6037444706895633657}
   m_Layer: 0
   m_Name: ClientSessionProxy
   m_TagString: Untagged
@@ -112,4 +113,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc82170402c844e43b9b1ca0ea35cec1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.ProgressFlags.ClientProgressFlagState
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &6037444706895633657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4250356374935768500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a35ad0c138dabc4bb79a0ab89c0ee24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Conditions.NetworkAnchorRequestor
   ShowTopMostFoldoutHeaderGroup: 1
