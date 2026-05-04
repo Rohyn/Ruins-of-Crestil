@@ -26,19 +26,17 @@ namespace ROC.Networking.Characters
         [Header("Look Tuning")]
         [SerializeField, Min(0.001f)] private float baseYawSensitivity = 0.12f;
         [SerializeField, Min(0.001f)] private float basePitchSensitivity = 0.10f;
-        [SerializeField] private float minPitch = -35f;
-        [SerializeField] private float maxPitch = 60f;
         [SerializeField, Min(0.1f)] private float mouseSensitivityMultiplier = 1f;
         [SerializeField] private bool invertY;
+
+        [Header("Pitch Clamp")]
+        [SerializeField] private float minPitch = -35f;
+        [SerializeField] private float maxPitch = 60f;
 
         [Header("Keys")]
         [SerializeField] private Key toggleMenuKey = Key.Tab;
         [SerializeField] private Key closeMenuKey = Key.Escape;
         [SerializeField] private Key toggleTemporaryFreeCursorKey = Key.LeftAlt;
-
-        [Header("Networking")]
-        [SerializeField, Min(1f)] private float lookSendRate = 30f;
-        [SerializeField, Min(0.01f)] private float minimumYawSendDelta = 0.1f;
 
         [Header("Startup")]
         [SerializeField] private bool startLockedInGameplay = true;
@@ -46,11 +44,10 @@ namespace ROC.Networking.Characters
         public event Action<CursorModeState> CursorModeChanged;
 
         public CursorModeState CurrentCursorMode { get; private set; } = CursorModeState.GameplayLocked;
+        public float YawDegrees { get; private set; }
+        public float PitchDegrees => _pitchDegrees;
 
-        private float _yawDegrees;
         private float _pitchDegrees;
-        private float _lastSentYawDegrees;
-        private float _nextLookSendTime;
 
         public override void OnNetworkSpawn()
         {
@@ -69,17 +66,14 @@ namespace ROC.Networking.Characters
                 return;
             }
 
-            _yawDegrees = transform.eulerAngles.y;
+            YawDegrees = NormalizeYaw(transform.eulerAngles.y);
             _pitchDegrees = 0f;
-            _lastSentYawDegrees = _yawDegrees;
 
-            cameraPivot.localRotation = Quaternion.identity;
+            ApplyCameraPivotRotation();
 
             SetCursorMode(startLockedInGameplay
                 ? CursorModeState.GameplayLocked
                 : CursorModeState.TemporaryFreeCursor);
-
-            SendLookYawToServer(force: true);
         }
 
         public override void OnNetworkDespawn()
@@ -124,6 +118,42 @@ namespace ROC.Networking.Characters
             ApplyMouseLook(mouse);
         }
 
+        private void LateUpdate()
+        {
+            if (!IsOwner || cameraPivot == null)
+            {
+                return;
+            }
+
+            // NetworkTransform may update the root after Update in dedicated-client mode.
+            // Re-apply local camera intent late so horizontal camera look remains responsive.
+            ApplyCameraPivotRotation();
+        }
+
+        public void SetCursorMode(CursorModeState newMode)
+        {
+            if (CurrentCursorMode == newMode)
+            {
+                ApplyCursorState(newMode);
+                return;
+            }
+
+            CurrentCursorMode = newMode;
+            ApplyCursorState(newMode);
+
+            CursorModeChanged?.Invoke(CurrentCursorMode);
+
+            if (IsOwner)
+            {
+                LocalCursorModeChanged?.Invoke(CurrentCursorMode);
+            }
+        }
+
+        public bool IsGameplayLookActive()
+        {
+            return CurrentCursorMode == CursorModeState.GameplayLocked;
+        }
+
         private void HandleModeToggleInput()
         {
             if (CurrentCursorMode == CursorModeState.ConversationCursor)
@@ -165,7 +195,7 @@ namespace ROC.Networking.Characters
             Vector2 mouseDelta = mouse.delta.ReadValue();
 
             float yawDelta = mouseDelta.x * baseYawSensitivity * mouseSensitivityMultiplier;
-            _yawDegrees = NormalizeYaw(_yawDegrees + yawDelta);
+            YawDegrees = NormalizeYaw(YawDegrees + yawDelta);
 
             float pitchInput = mouseDelta.y * basePitchSensitivity * mouseSensitivityMultiplier;
 
@@ -176,35 +206,21 @@ namespace ROC.Networking.Characters
 
             _pitchDegrees = Mathf.Clamp(_pitchDegrees + pitchInput, minPitch, maxPitch);
 
-            // Local visual prediction for responsive camera feel.
-            transform.rotation = Quaternion.Euler(0f, _yawDegrees, 0f);
-            cameraPivot.localRotation = Quaternion.Euler(_pitchDegrees, 0f, 0f);
-
-            SendLookYawToServer(force: false);
+            ApplyCameraPivotRotation();
         }
 
-        public void SetCursorMode(CursorModeState newMode)
+        private void ApplyCameraPivotRotation()
         {
-            if (CurrentCursorMode == newMode)
+            if (cameraPivot == null)
             {
-                ApplyCursorState(newMode);
                 return;
             }
 
-            CurrentCursorMode = newMode;
-            ApplyCursorState(newMode);
+            Quaternion yaw = Quaternion.Euler(0f, YawDegrees, 0f);
+            Quaternion pitch = Quaternion.Euler(_pitchDegrees, 0f, 0f);
 
-            CursorModeChanged?.Invoke(CurrentCursorMode);
-
-            if (IsOwner)
-            {
-                LocalCursorModeChanged?.Invoke(CurrentCursorMode);
-            }
-        }
-
-        public bool IsGameplayLookActive()
-        {
-            return CurrentCursorMode == CursorModeState.GameplayLocked;
+            // World rotation, not local rotation. This avoids depending on owner-side root yaw.
+            cameraPivot.rotation = yaw * pitch;
         }
 
         private void ApplyCursorState(CursorModeState mode)
@@ -222,48 +238,6 @@ namespace ROC.Networking.Characters
                     Cursor.lockState = CursorLockMode.None;
                     Cursor.visible = true;
                     break;
-            }
-        }
-
-        private void SendLookYawToServer(bool force)
-        {
-            if (!IsSpawned)
-            {
-                return;
-            }
-
-            float now = Time.unscaledTime;
-            float sendInterval = 1f / lookSendRate;
-            float yawDelta = Mathf.Abs(Mathf.DeltaAngle(_lastSentYawDegrees, _yawDegrees));
-
-            if (!force && now < _nextLookSendTime && yawDelta < minimumYawSendDelta)
-            {
-                return;
-            }
-
-            _lastSentYawDegrees = _yawDegrees;
-            _nextLookSendTime = now + sendInterval;
-
-            SubmitLookYawServerRpc(_yawDegrees);
-        }
-
-        [ServerRpc]
-        private void SubmitLookYawServerRpc(float yawDegrees, ServerRpcParams serverRpcParams = default)
-        {
-            ulong senderClientId = serverRpcParams.Receive.SenderClientId;
-
-            if (senderClientId != OwnerClientId)
-            {
-                return;
-            }
-
-            float normalizedYaw = NormalizeYaw(yawDegrees);
-
-            transform.rotation = Quaternion.Euler(0f, normalizedYaw, 0f);
-
-            if (TryGetComponent(out NetworkPlayerAvatar avatar))
-            {
-                avatar.SetServerYawDegrees(normalizedYaw);
             }
         }
 
@@ -303,8 +277,6 @@ namespace ROC.Networking.Characters
             baseYawSensitivity = Mathf.Max(0.001f, baseYawSensitivity);
             basePitchSensitivity = Mathf.Max(0.001f, basePitchSensitivity);
             mouseSensitivityMultiplier = Mathf.Max(0.1f, mouseSensitivityMultiplier);
-            lookSendRate = Mathf.Max(1f, lookSendRate);
-            minimumYawSendDelta = Mathf.Max(0.01f, minimumYawSendDelta);
 
             if (maxPitch < minPitch)
             {

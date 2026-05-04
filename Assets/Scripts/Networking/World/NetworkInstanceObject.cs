@@ -20,10 +20,16 @@ namespace ROC.Networking.World
             NetworkVariableWritePermission.Server);
 
         private readonly List<IInstanceVisibilityRule> _visibilityRules = new();
-        private NetworkObject _networkObject;
-        private string _serverInstanceId;
 
-        public string InstanceIdString => IsServer ? _serverInstanceId : InstanceId.Value.ToString();
+        private NetworkObject _networkObject;
+
+        private string _serverInstanceId;
+        private string _serverStableObjectId;
+        private bool _hasPendingServerState;
+
+        public string InstanceIdString => IsServer
+            ? _serverInstanceId
+            : InstanceId.Value.ToString();
 
         private void Awake()
         {
@@ -37,6 +43,11 @@ namespace ROC.Networking.World
         {
             if (IsServer)
             {
+                if (_hasPendingServerState)
+                {
+                    ApplyServerState();
+                }
+
                 InstanceVisibilityService.Instance?.Register(this);
             }
         }
@@ -65,10 +76,15 @@ namespace ROC.Networking.World
                 return;
             }
 
-            _serverInstanceId = instanceId;
+            _serverInstanceId = instanceId ?? string.Empty;
+            _serverStableObjectId = stableObjectId ?? string.Empty;
+            _hasPendingServerState = true;
 
-            InstanceId.Value = new FixedString128Bytes(instanceId);
-            StableObjectId.Value = new FixedString64Bytes(stableObjectId ?? string.Empty);
+            if (IsSpawned)
+            {
+                ApplyServerState();
+                InstanceVisibilityService.Instance?.RefreshObject(this);
+            }
         }
 
         public bool ShouldBeVisibleTo(ulong clientId)
@@ -93,6 +109,13 @@ namespace ROC.Networking.World
             }
 
             return true;
+        }
+
+        private void ApplyServerState()
+        {
+            InstanceId.Value = new FixedString128Bytes(_serverInstanceId);
+            StableObjectId.Value = new FixedString64Bytes(_serverStableObjectId);
+            _hasPendingServerState = false;
         }
 
         private bool CheckObjectVisibility(ulong clientId)

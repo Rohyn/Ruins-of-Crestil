@@ -42,7 +42,6 @@ GameObject:
   - component: {fileID: 6202125649757070485}
   - component: {fileID: 8265013396619352840}
   - component: {fileID: 3783987348357585208}
-  - component: {fileID: 1079281061663274404}
   - component: {fileID: 8744914836122685505}
   - component: {fileID: 8317614153200741973}
   - component: {fileID: -1778362894157353403}
@@ -50,6 +49,11 @@ GameObject:
   - component: {fileID: 6754278389387198423}
   - component: {fileID: 5689592286758474551}
   - component: {fileID: 9191286051877628742}
+  - component: {fileID: 1488907509719187628}
+  - component: {fileID: 8793446110581671625}
+  - component: {fileID: 5075870194697270792}
+  - component: {fileID: 1679443108806831343}
+  - component: {fileID: 5460775638480095909}
   m_Layer: 0
   m_Name: PlayerAvatar
   m_TagString: Untagged
@@ -130,29 +134,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &1079281061663274404
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8219589089771029425}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &8744914836122685505
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -165,7 +146,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2086103668
+  GlobalObjectIdHash: 1739107041
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -211,9 +192,9 @@ MonoBehaviour:
   SyncRotAngleX: 1
   SyncRotAngleY: 1
   SyncRotAngleZ: 1
-  SyncScaleX: 1
-  SyncScaleY: 1
-  SyncScaleZ: 1
+  SyncScaleX: 0
+  SyncScaleY: 0
+  SyncScaleZ: 0
   PositionThreshold: 0.001
   RotAngleThreshold: 0.01
   ScaleThreshold: 0.01
@@ -250,10 +231,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Characters.NetworkPlayerAvatar
   ShowTopMostFoldoutHeaderGroup: 1
-  moveSpeed: 4.5
-  inputKeepAliveSeconds: 0.15
-  serverInputTimeoutSeconds: 0.35
-  lookController: {fileID: 9191286051877628742}
 --- !u!114 &6754278389387198423
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -312,13 +289,130 @@ MonoBehaviour:
   cameraPivot: {fileID: 1219265982060342020}
   baseYawSensitivity: 0.12
   basePitchSensitivity: 0.1
-  minPitch: -35
-  maxPitch: 60
   mouseSensitivityMultiplier: 1
   invertY: 0
+  minPitch: -35
+  maxPitch: 60
   toggleMenuKey: 3
   closeMenuKey: 60
   toggleTemporaryFreeCursorKey: 53
-  lookSendRate: 30
-  minimumYawSendDelta: 0.1
   startLockedInGameplay: 1
+--- !u!143 &1488907509719187628
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8219589089771029425}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8793446110581671625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8219589089771029425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03d06d48f226c4449a6d790968487b37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Characters.NetworkPlayerMotor
+  ShowTopMostFoldoutHeaderGroup: 1
+  lookController: {fileID: 9191286051877628742}
+  walkSpeed: 4.5
+  runMultiplier: 1.55
+  clampDiagonalMovement: 1
+  jumpHeight: 1.2
+  gravity: -22
+  groundedStickForce: -2
+  coyoteTime: 0.08
+  jumpBufferTime: 0.1
+  jumpKey: 1
+  runKey: 51
+  inputKeepAliveSeconds: 0.1
+  serverInputTimeoutSeconds: 0.35
+  maxInputSendRate: 30
+  serverAppliesGameplayYawToRoot: 1
+  nonOwnersApplyReplicatedYawToRoot: 1
+  yawReplicationThresholdDegrees: 0.1
+  verboseLogging: 0
+--- !u!114 &5075870194697270792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8219589089771029425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b313f8ec5c81f54bb05243ab69c45d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.PlayerInteractionSensor
+  ShowTopMostFoldoutHeaderGroup: 1
+  detectionRadius: 5
+  detectionMask:
+    serializedVersion: 2
+    m_Bits: 8
+  refreshIntervalSeconds: 0.05
+  queryTriggerInteraction: 2
+  verboseLogging: 1
+--- !u!114 &1679443108806831343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8219589089771029425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6c80a692c272ca4aab1530741396001, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.PlayerInteractionSelector
+  ShowTopMostFoldoutHeaderGroup: 1
+  interactionSensor: {fileID: 5075870194697270792}
+  cameraTransformOverride: {fileID: 0}
+  rescoreIntervalSeconds: 0.08
+  selectionOriginHeight: 1
+  minimumFacingDot: 0
+  closeRangeOverrideDistance: 1
+  requireLineOfSight: 1
+  lineOfSightBlockers:
+    serializedVersion: 2
+    m_Bits: 64
+  targetLostGraceSeconds: 0.18
+  switchScoreMargin: 8
+  verboseLogging: 1
+--- !u!114 &5460775638480095909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8219589089771029425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bb7a4ec4476120469e1c86788ad7be0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.PlayerInteractor
+  ShowTopMostFoldoutHeaderGroup: 1
+  interactionSelector: {fileID: 1679443108806831343}
+  lookController: {fileID: 9191286051877628742}
+  interactKey: 19
+  verboseLogging: 1

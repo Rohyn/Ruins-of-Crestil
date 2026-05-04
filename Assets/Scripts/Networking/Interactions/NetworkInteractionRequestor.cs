@@ -35,7 +35,9 @@ namespace ROC.Networking.Interactions
             }
         }
 
-        private ServerActionResult TryHandleInteraction(ulong clientId, ulong targetNetworkObjectId)
+        private ServerActionResult TryHandleInteraction(
+            ulong clientId,
+            ulong targetNetworkObjectId)
         {
             if (clientId != OwnerClientId)
             {
@@ -77,6 +79,13 @@ namespace ROC.Networking.Interactions
                     "Target object is not spawned.");
             }
 
+            if (!target.TryGetComponent(out NetworkInteractableTarget interactableTarget))
+            {
+                return ServerActionResult.Fail(
+                    ServerActionErrorCode.InvalidTarget,
+                    "Target is not a NetworkInteractableTarget.");
+            }
+
             if (!target.TryGetComponent(out NetworkInstanceObject targetInstanceObject))
             {
                 return ServerActionResult.Fail(
@@ -102,11 +111,14 @@ namespace ROC.Networking.Interactions
             {
                 return ServerActionResult.Fail(
                     ServerActionErrorCode.InvalidTarget,
-                    "Target is not interactable.");
+                    "Target has no IServerInteractable component.");
             }
 
+            Vector3 actorPosition = session.AvatarObject.transform.position;
+            Vector3 targetPoint = interactableTarget.GetInteractionEvaluationPoint(actorPosition);
+
             float maxDistance = interactable.MaxInteractDistance;
-            float sqrDistance = (session.AvatarObject.transform.position - target.transform.position).sqrMagnitude;
+            float sqrDistance = (actorPosition - targetPoint).sqrMagnitude;
 
             if (sqrDistance > maxDistance * maxDistance)
             {
