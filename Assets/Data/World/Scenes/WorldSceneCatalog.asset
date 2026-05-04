@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb8b4f9cf7a300f438a36f1da1771f1f, type: 3}
+  m_Name: WorldSceneCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Game.World.WorldSceneCatalog
+  scenes:
+  - {fileID: 11400000, guid: faa647bc3b4639f40b62720f797a182d, type: 2}
+  - {fileID: 11400000, guid: 56efb6847c2135a4ca1acd4e375fbf16, type: 2}
