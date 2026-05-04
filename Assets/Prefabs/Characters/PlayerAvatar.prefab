@@ -146,7 +146,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1739107041
+  GlobalObjectIdHash: 2086103668
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -336,7 +336,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Characters.NetworkPlayerMotor
   ShowTopMostFoldoutHeaderGroup: 1
   lookController: {fileID: 9191286051877628742}
-  walkSpeed: 4.5
+  walkSpeed: 3
   runMultiplier: 1.55
   clampDiagonalMovement: 1
   jumpHeight: 1.2

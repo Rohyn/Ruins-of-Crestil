@@ -203,6 +203,11 @@ namespace ROC.Networking.World
                     marker.transform.position,
                     marker.transform.rotation);
 
+                if (marker.ApplyMarkerScale)
+                {
+                    spawned.transform.localScale = marker.transform.lossyScale;
+                }
+
                 SceneManager.MoveGameObjectToScene(spawned.gameObject, instance.LoadedScene);
 
                 if (spawned.TryGetComponent(out NetworkInstanceObject instanceObject))

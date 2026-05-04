@@ -9,7 +9,11 @@ namespace ROC.Networking.World
         [SerializeField] private NetworkObject networkPrefab;
         [SerializeField] private string stableObjectId;
 
+        [Header("Transform")]
+        [SerializeField] private bool applyMarkerScale = true;
+
         public NetworkObject NetworkPrefab => networkPrefab;
         public string StableObjectId => stableObjectId;
+        public bool ApplyMarkerScale => applyMarkerScale;
     }
 }
