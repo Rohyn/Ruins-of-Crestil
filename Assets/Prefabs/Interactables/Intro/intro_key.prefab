@@ -123,7 +123,8 @@ GameObject:
   - component: {fileID: 514237843585398764}
   - component: {fileID: -1258047602358806818}
   - component: {fileID: 738187239068178883}
-  - component: {fileID: 8919894089455838074}
+  - component: {fileID: 1734469434982216555}
+  - component: {fileID: 6267506576629638928}
   m_Layer: 0
   m_Name: intro_key
   m_TagString: Untagged
@@ -284,7 +285,7 @@ MonoBehaviour:
   - {fileID: 3468910873677517646}
   interactionFoci:
   - {fileID: 6327221964432309851}
---- !u!114 &8919894089455838074
+--- !u!114 &1734469434982216555
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -293,15 +294,45 @@ MonoBehaviour:
   m_GameObject: {fileID: 7719889832764554004}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0592c5c5a3065b646912679cb417cd68, type: 3}
+  m_Script: {fileID: 11500000, guid: 52b45ae7315552540acb6711e5821977, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.InventoryGrantInteractable
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.InteractionExecutor
   ShowTopMostFoldoutHeaderGroup: 1
   maxInteractDistance: 3
-  progressRequirements: []
-  grants:
-  - itemDefinitionId: intro.infirmary_key
-    quantity: 1
-  successProgressMutations: []
-  source: inventory_grant
-  disableAfterSuccessfulUse: 1
+  objectRules: {fileID: 11400000, guid: 9d476212e85214c46a91c95c7e5c21ea, type: 2}
+  actions:
+  - enabled: 1
+    action: {fileID: 11400000, guid: 53966f633684c674db3ddfee1597d251, type: 2}
+    failureBehavior: 0
+  validateRequiredActionsBeforeExecution: 1
+  verboseLogging: 1
+--- !u!114 &6267506576629638928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7719889832764554004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf425b92e2512bd4181a80cbe470e6e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.InteractionUsageGate
+  ShowTopMostFoldoutHeaderGroup: 1
+  limitEachCharacterToOneUse: 1
+  hideForCharacterAfterUse: 1
+  useGlobalCapacity: 0
+  globalUseCapacity: 1
+  hideGloballyWhenDepleted: 0
+  persistenceMode: 1
+  usageKeyScope: 1
+  usageKeyOverride: 
+  cleanupGroup: intro
+  source: intro.key
+  migrateLegacyProgressFlagUsage: 0
+  legacyProgressFlagIdOverride: 
+  legacyProgressFlagPrefix: interaction.used
+  hideRenderersLocallyWhenHidden: 1
+  localPresentationRoot: {fileID: 0}
+  renderersToHide: []
+  verboseLogging: 1

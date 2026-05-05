@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using ROC.Game.World;
 using ROC.Game.Common;
-using ROC.Networking.Characters;
-using ROC.Networking.World;
-using ROC.Networking.Sessions;
 using ROC.Game.Conditions;
+using ROC.Game.World;
+using ROC.Networking.Characters;
+using ROC.Networking.Sessions;
+using ROC.Networking.World;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -67,13 +67,23 @@ namespace ROC.Game.Sessions
                 return;
             }
 
-            if (!routingService.TryResolveEntryLocation(character, clientId, out WorldLocation location, out error))
+            if (!routingService.TryResolveEntryLocation(
+                    character,
+                    clientId,
+                    out WorldLocation location,
+                    out WorldArrivalReason arrivalReason,
+                    out error))
             {
                 Debug.LogWarning($"[GameSessionManager] Route failed: {error}");
                 return;
             }
 
-            BeginMoveClientToLocation(clientId, character, location);
+            BeginMoveClientToLocation(
+                clientId,
+                character,
+                location,
+                arrivalReason,
+                saveCurrentLocationBeforeMove: true);
         }
 
         public void CompleteIntroAndEnterSharedWorld(ulong clientId, string characterId)
@@ -108,11 +118,16 @@ namespace ROC.Game.Sessions
 
             if (!characterRepository.TryGetCharacter(accountId, characterId, out PersistentCharacterRecord updatedCharacter))
             {
-                Debug.LogWarning($"[GameSessionManager] Failed to reload character after intro completion.");
+                Debug.LogWarning("[GameSessionManager] Failed to reload character after intro completion.");
                 return;
             }
 
-            BeginMoveClientToLocation(clientId, updatedCharacter, updatedCharacter.CurrentLocation);
+            BeginMoveClientToLocation(
+                clientId,
+                updatedCharacter,
+                sharedLocation,
+                WorldArrivalReason.IntroCompletion,
+                saveCurrentLocationBeforeMove: false);
         }
 
         public bool TryGetClientAvatarObject(ulong clientId, out NetworkObject avatarObject)
@@ -132,18 +147,23 @@ namespace ROC.Game.Sessions
         public bool TryGetClientInstanceId(ulong clientId, out string instanceId)
         {
             instanceId = string.Empty;
-
-            return instanceManager != null &&
-                   instanceManager.TryGetClientInstanceId(clientId, out instanceId);
+            return instanceManager != null && instanceManager.TryGetClientInstanceId(clientId, out instanceId);
         }
 
         private void BeginMoveClientToLocation(
             ulong clientId,
             PersistentCharacterRecord character,
-            WorldLocation location)
+            WorldLocation location,
+            WorldArrivalReason arrivalReason,
+            bool saveCurrentLocationBeforeMove)
         {
             AnchoringService.Instance?.CleanupClientForWorldTransfer(clientId);
-            SaveActiveClientLocation(clientId);
+
+            if (saveCurrentLocationBeforeMove)
+            {
+                SaveActiveClientLocation(clientId);
+            }
+
             DespawnActiveAvatar(clientId);
 
             if (!sceneCatalog.TryGetScene(location.SceneId, out WorldSceneDefinition sceneDefinition))
@@ -173,7 +193,8 @@ namespace ROC.Game.Sessions
                 AccountId = character.AccountId,
                 CharacterId = character.CharacterId,
                 DisplayName = character.DisplayName,
-                Location = location
+                Location = location,
+                ArrivalReason = arrivalReason
             };
 
             instanceManager.EnsureInstanceLoaded(
@@ -209,7 +230,10 @@ namespace ROC.Game.Sessions
                 loadedInstance.InstanceId);
         }
 
-        private void HandleClientWorldSceneReady(ulong clientId, string sceneId, string instanceId)
+        private void HandleClientWorldSceneReady(
+            ulong clientId,
+            string sceneId,
+            string instanceId)
         {
             if (!_pendingSpawns.TryGetValue(clientId, out PendingSpawn pending))
             {
@@ -226,7 +250,6 @@ namespace ROC.Game.Sessions
             }
 
             instanceManager.SetClientInstance(clientId, instanceId);
-
             SpawnAvatarForClient(clientId, pending);
             _pendingSpawns.Remove(clientId);
         }
@@ -239,13 +262,15 @@ namespace ROC.Game.Sessions
                 return;
             }
 
-            ResolveSpawnTransform(
+            SpawnResolution spawnResolution = ResolveSpawnTransform(
                 instance,
                 pending.Location,
-                out Vector3 spawnPosition,
-                out Quaternion spawnRotation);
+                pending.ArrivalReason);
 
-            NetworkPlayerAvatar avatar = Instantiate(playerAvatarPrefab, spawnPosition, spawnRotation);
+            NetworkPlayerAvatar avatar = Instantiate(
+                playerAvatarPrefab,
+                spawnResolution.Position,
+                spawnResolution.Rotation);
 
             SceneManager.MoveGameObjectToScene(avatar.gameObject, instance.LoadedScene);
 
@@ -282,39 +307,94 @@ namespace ROC.Game.Sessions
                 Debug.LogWarning($"[GameSessionManager] Failed to update session registry: {inWorldResult}");
             }
 
+            ApplyArrivalProfileIfNeeded(
+                clientId,
+                networkObject,
+                instance,
+                pending.ArrivalReason,
+                spawnResolution.ArrivalProfile);
+
             InstanceVisibilityService.Instance?.RefreshAll();
 
             Debug.Log(
                 $"[GameSessionManager] Spawned {pending.DisplayName} for client {clientId}. " +
-                $"SceneId={pending.Location.SceneId}, InstanceId={pending.Location.InstanceId}");
+                $"SceneId={pending.Location.SceneId}, InstanceId={pending.Location.InstanceId}, ArrivalReason={pending.ArrivalReason}");
         }
 
-        private void ResolveSpawnTransform(
+        private SpawnResolution ResolveSpawnTransform(
             WorldInstance instance,
             WorldLocation location,
-            out Vector3 position,
-            out Quaternion rotation)
+            WorldArrivalReason arrivalReason)
         {
+            SpawnResolution result = new SpawnResolution
+            {
+                Position = location.Position,
+                Rotation = location.Rotation == default ? Quaternion.identity : location.Rotation,
+                ArrivalProfile = null
+            };
+
             if (location.UseExplicitTransform)
             {
-                position = location.Position;
-                rotation = location.Rotation;
-                return;
+                return result;
             }
 
             if (NetworkSpawnPoint.TryFindInScene(instance.LoadedScene, location, sceneCatalog, out NetworkSpawnPoint spawnPoint))
             {
-                position = spawnPoint.transform.position;
-                rotation = spawnPoint.transform.rotation;
-                return;
-            }
+                spawnPoint.ResolveBasePose(
+                    result.Rotation,
+                    out Vector3 spawnPosition,
+                    out Quaternion spawnRotation);
 
-            position = location.Position;
-            rotation = location.Rotation == default ? Quaternion.identity : location.Rotation;
+                result.Position = spawnPosition;
+                result.Rotation = spawnRotation;
+
+                NetworkArrivalProfile arrivalProfile = spawnPoint.ArrivalProfile;
+
+                if (arrivalProfile != null && arrivalProfile.ShouldApply(arrivalReason))
+                {
+                    spawnPoint.TryResolveArrivalPose(
+                        instance,
+                        arrivalReason,
+                        result.Position,
+                        result.Rotation,
+                        out result.Position,
+                        out result.Rotation);
+
+                    result.ArrivalProfile = arrivalProfile;
+                }
+
+                return result;
+            }
 
             Debug.LogWarning(
                 $"[GameSessionManager] No spawn point found for SceneId={location.SceneId}, " +
                 $"SpawnPointId={location.SpawnPointId}. Using stored transform fallback.");
+
+            return result;
+        }
+
+        private void ApplyArrivalProfileIfNeeded(
+            ulong clientId,
+            NetworkObject actor,
+            WorldInstance instance,
+            WorldArrivalReason arrivalReason,
+            NetworkArrivalProfile arrivalProfile)
+        {
+            if (arrivalProfile == null)
+            {
+                return;
+            }
+
+            ServerActionResult arrivalResult = arrivalProfile.ApplyPostSpawn(
+                clientId,
+                actor,
+                instance,
+                arrivalReason);
+
+            if (!arrivalResult.Success)
+            {
+                Debug.LogWarning($"[GameSessionManager] Arrival profile failed: {arrivalResult}");
+            }
         }
 
         private void HandleClientDisconnected(ulong clientId)
@@ -322,10 +402,8 @@ namespace ROC.Game.Sessions
             AnchoringService.Instance?.CleanupClientForDisconnect(clientId);
             SaveActiveClientLocation(clientId);
             DespawnActiveAvatar(clientId);
-
             _pendingSpawns.Remove(clientId);
             _activeSessions.Remove(clientId);
-
             instanceManager?.RemoveClient(clientId, unloadIfEmpty: true);
             sessionRegistry?.RemoveClient(clientId);
         }
@@ -343,14 +421,14 @@ namespace ROC.Game.Sessions
             }
 
             WorldLocation savedLocation = session.LocationTracker.CaptureLocation(session.Location);
-
             IPlayerLocationRepository locationWriter = _locationRepository ?? characterRepository;
 
-            bool saved = locationWriter != null &&
-                         locationWriter.UpdateCharacterLocation(
-                             session.AccountId,
-                             session.CharacterId,
-                             savedLocation);
+            bool saved =
+                locationWriter != null &&
+                locationWriter.UpdateCharacterLocation(
+                    session.AccountId,
+                    session.CharacterId,
+                    savedLocation);
 
             if (saved)
             {
@@ -361,6 +439,7 @@ namespace ROC.Game.Sessions
         private void DespawnActiveAvatar(ulong clientId)
         {
             AnchoringService.Instance?.ForceReleaseAnchorWithoutExitSnap(clientId);
+
             if (!_activeSessions.TryGetValue(clientId, out ActivePlayerSession session))
             {
                 return;
@@ -372,7 +451,6 @@ namespace ROC.Game.Sessions
             }
 
             sessionRegistry?.ClearAvatar(clientId);
-
             _activeSessions.Remove(clientId);
         }
 
@@ -497,6 +575,14 @@ namespace ROC.Game.Sessions
             public string CharacterId;
             public string DisplayName;
             public WorldLocation Location;
+            public WorldArrivalReason ArrivalReason;
+        }
+
+        private struct SpawnResolution
+        {
+            public Vector3 Position;
+            public Quaternion Rotation;
+            public NetworkArrivalProfile ArrivalProfile;
         }
 
         private sealed class ActivePlayerSession

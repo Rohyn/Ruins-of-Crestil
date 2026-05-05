@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2016bdfc82180cf4eb02167e30e71f8d, type: 3}
+  m_Name: Intro_Door_HasKeyBranch
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.Data.InteractionBranchDefinition
+  rules: {fileID: 11400000, guid: 0be91b23a9d417149870cf88b63d915b, type: 2}
+  actions:
+  - enabled: 1
+    action: {fileID: 11400000, guid: bcb81c8b1cdc3364498bb6978800c077, type: 2}
+    failureBehavior: 0
+  - enabled: 1
+    action: {fileID: 11400000, guid: 261de43a9cd9bce488be6eec773f8172, type: 2}
+    failureBehavior: 0
+  - enabled: 1
+    action: {fileID: 11400000, guid: 3ab8ccbaf682b3d4b99a06239f07aeda, type: 2}
+    failureBehavior: 0
+  verboseLogging: 1

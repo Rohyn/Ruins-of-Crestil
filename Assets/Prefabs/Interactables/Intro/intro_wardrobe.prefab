@@ -16,7 +16,8 @@ GameObject:
   - component: {fileID: 7082214295607627452}
   - component: {fileID: 8557355030808938200}
   - component: {fileID: 2263475124093953845}
-  - component: {fileID: 7759554794204238085}
+  - component: {fileID: 545500299089740156}
+  - component: {fileID: 7612006867925915820}
   m_Layer: 0
   m_Name: intro_wardrobe
   m_TagString: Untagged
@@ -200,7 +201,7 @@ MonoBehaviour:
   - {fileID: 3335588304908736492}
   interactionFoci:
   - {fileID: 503550220877790409}
---- !u!114 &7759554794204238085
+--- !u!114 &545500299089740156
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -209,24 +210,51 @@ MonoBehaviour:
   m_GameObject: {fileID: 301574452089074981}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0592c5c5a3065b646912679cb417cd68, type: 3}
+  m_Script: {fileID: 11500000, guid: 52b45ae7315552540acb6711e5821977, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.InventoryGrantInteractable
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.InteractionExecutor
   ShowTopMostFoldoutHeaderGroup: 1
   maxInteractDistance: 3
-  progressRequirements: []
-  grants:
-  - itemDefinitionId: intro.ratty_shirt
-    quantity: 1
-  - itemDefinitionId: intro.ratty_pants
-    quantity: 1
-  successProgressMutations:
-  - mutationKind: 0
-    flagIdOrPrefix: intro.received_clothes
-    lifetime: 0
-    source: intro.wardrobe
+  objectRules: {fileID: 0}
+  actions:
+  - enabled: 1
+    action: {fileID: 11400000, guid: a0d5d4857346e63409f13a477bfb4b41, type: 2}
+    failureBehavior: 0
+  - enabled: 1
+    action: {fileID: 11400000, guid: 5ef862815ed67de4d97863829a8e26b5, type: 2}
+    failureBehavior: 0
+  validateRequiredActionsBeforeExecution: 1
+  verboseLogging: 1
+--- !u!114 &7612006867925915820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301574452089074981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf425b92e2512bd4181a80cbe470e6e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.InteractionUsageGate
+  ShowTopMostFoldoutHeaderGroup: 1
+  limitEachCharacterToOneUse: 1
+  hideForCharacterAfterUse: 0
+  useGlobalCapacity: 0
+  globalUseCapacity: 1
+  hideGloballyWhenDepleted: 0
+  persistenceMode: 1
+  usageKeyScope: 1
+  usageKeyOverride: 
+  cleanupGroup: intro
   source: intro.wardrobe
-  disableAfterSuccessfulUse: 1
+  migrateLegacyProgressFlagUsage: 0
+  legacyProgressFlagIdOverride: 
+  legacyProgressFlagPrefix: interaction.used
+  hideRenderersLocallyWhenHidden: 1
+  localPresentationRoot: {fileID: 0}
+  renderersToHide: []
+  verboseLogging: 0
 --- !u!1 &2579815400782755227
 GameObject:
   m_ObjectHideFlags: 0

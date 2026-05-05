@@ -26,9 +26,7 @@ namespace ROC.Networking.Interactions
             ServerRpcParams serverRpcParams = default)
         {
             ulong clientId = serverRpcParams.Receive.SenderClientId;
-
             ServerActionResult result = TryHandleInteraction(clientId, targetNetworkObjectId);
-
             if (!result.Success)
             {
                 Debug.LogWarning($"[NetworkInteractionRequestor] Interaction rejected: {result}");
@@ -47,7 +45,6 @@ namespace ROC.Networking.Interactions
             }
 
             PlayerSessionRegistry registry = PlayerSessionRegistry.Instance;
-
             if (registry == null || !registry.TryGet(clientId, out PlayerSessionData session))
             {
                 return ServerActionResult.Fail(
@@ -107,19 +104,24 @@ namespace ROC.Networking.Interactions
                     "Target is not visible to this client.");
             }
 
+            if (!TryEvaluateAvailabilityRules(target, clientId, session.AvatarObject, out string availabilityReason))
+            {
+                return ServerActionResult.Fail(
+                    ServerActionErrorCode.InvalidState,
+                    availabilityReason);
+            }
+
             if (!TryGetInteractable(target, out IServerInteractable interactable))
             {
                 return ServerActionResult.Fail(
                     ServerActionErrorCode.InvalidTarget,
-                    "Target has no IServerInteractable component.");
+                    "Target has no IServerInteractable component or InteractionExecutor.");
             }
 
             Vector3 actorPosition = session.AvatarObject.transform.position;
             Vector3 targetPoint = interactableTarget.GetInteractionEvaluationPoint(actorPosition);
-
             float maxDistance = interactable.MaxInteractDistance;
             float sqrDistance = (actorPosition - targetPoint).sqrMagnitude;
-
             if (sqrDistance > maxDistance * maxDistance)
             {
                 return ServerActionResult.Fail(
@@ -134,8 +136,23 @@ namespace ROC.Networking.Interactions
                     reason);
             }
 
-            interactable.Interact(clientId, session.AvatarObject);
+            ServerActionResult executionResult;
+            if (interactable is InteractionExecutor executor)
+            {
+                executionResult = executor.ExecuteInteraction(clientId, session.AvatarObject);
+            }
+            else
+            {
+                interactable.Interact(clientId, session.AvatarObject);
+                executionResult = ServerActionResult.Ok();
+            }
 
+            if (!executionResult.Success)
+            {
+                return executionResult;
+            }
+
+            NotifyUseObservers(target, clientId, session.AvatarObject, interactable);
             return ServerActionResult.Ok();
         }
 
@@ -144,14 +161,20 @@ namespace ROC.Networking.Interactions
             out IServerInteractable interactable)
         {
             interactable = null;
-
             if (target == null)
             {
                 return false;
             }
 
-            MonoBehaviour[] behaviours = target.GetComponents<MonoBehaviour>();
+            // Prefer the new data-driven executor. This prevents legacy action components on the same
+            // object from being selected accidentally during migration.
+            if (target.TryGetComponent(out InteractionExecutor executor))
+            {
+                interactable = executor;
+                return true;
+            }
 
+            MonoBehaviour[] behaviours = target.GetComponents<MonoBehaviour>();
             for (int i = 0; i < behaviours.Length; i++)
             {
                 if (behaviours[i] is IServerInteractable candidate)
@@ -162,6 +185,60 @@ namespace ROC.Networking.Interactions
             }
 
             return false;
+        }
+
+        private static bool TryEvaluateAvailabilityRules(
+            NetworkObject target,
+            ulong clientId,
+            NetworkObject actor,
+            out string reason)
+        {
+            reason = string.Empty;
+            if (target == null)
+            {
+                return true;
+            }
+
+            MonoBehaviour[] behaviours = target.GetComponents<MonoBehaviour>();
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (!(behaviours[i] is IInteractionAvailabilityRule rule))
+                {
+                    continue;
+                }
+
+                if (!rule.CanInteract(clientId, actor, out reason))
+                {
+                    if (string.IsNullOrWhiteSpace(reason))
+                    {
+                        reason = "Target is not currently interactable.";
+                    }
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static void NotifyUseObservers(
+            NetworkObject target,
+            ulong clientId,
+            NetworkObject actor,
+            IServerInteractable executedInteractable)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            MonoBehaviour[] behaviours = target.GetComponents<MonoBehaviour>();
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] is IInteractionUseObserver observer)
+                {
+                    observer.HandleInteractionSucceeded(clientId, actor, executedInteractable);
+                }
+            }
         }
     }
 }

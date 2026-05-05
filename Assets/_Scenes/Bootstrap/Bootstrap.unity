@@ -6066,6 +6066,8 @@ GameObject:
   - component: {fileID: 1689038540}
   - component: {fileID: 1689038543}
   - component: {fileID: 1689038542}
+  - component: {fileID: 1689038545}
+  - component: {fileID: 1689038544}
   m_Layer: 0
   m_Name: AppRoot
   m_TagString: Untagged
@@ -6266,6 +6268,7 @@ MonoBehaviour:
   sceneCatalog: {fileID: 11400000, guid: 38747548fc3fd254bbd7eca93b03803e, type: 2}
   introSceneId: intro_arrival
   defaultSharedSceneId: dkeep_center
+  firstEntryTimestampToleranceSeconds: 1
 --- !u!114 &1689038534
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6406,6 +6409,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ROC.Game.Inventory.LocalInventoryRepository
   relativeFolder: LocalServer
   fileName: inventories.v1.json
+  prettyJson: 1
+--- !u!114 &1689038544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1689038524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ddde21ec95d2ba4280d7446bf0d762b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Game.ObjectUsage.ObjectUsageService
+  repositoryBehaviour: {fileID: 1689038528}
+  verboseLogging: 1
+--- !u!114 &1689038545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1689038524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d21a287708a3634e91426449791017d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Game.ObjectUsage.LocalObjectUsageRepository
+  relativeFolder: LocalServer
+  fileName: object_usage.v1.json
   prettyJson: 1
 --- !u!1 &1700129052
 GameObject:

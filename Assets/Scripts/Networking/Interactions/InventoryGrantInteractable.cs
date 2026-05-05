@@ -1,11 +1,17 @@
+using System;
 using ROC.Game.Common;
-using ROC.Game.ProgressFlags;
 using ROC.Networking.Inventory;
 using Unity.Netcode;
 using UnityEngine;
 
 namespace ROC.Networking.Interactions
 {
+    /// <summary>
+    /// Legacy component kept so existing prefabs do not immediately break.
+    /// Prefer InteractionExecutor + InventoryGrantActionDefinition for all new content.
+    /// This legacy component now grants inventory only; progress flags and once-only behavior are separate systems.
+    /// </summary>
+    [Obsolete("Use InteractionExecutor with InventoryGrantActionDefinition instead. This legacy component is inventory-only.")]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NetworkObject))]
     [RequireComponent(typeof(NetworkInteractableTarget))]
@@ -13,49 +19,35 @@ namespace ROC.Networking.Interactions
     {
         [SerializeField, Min(0.1f)] private float maxInteractDistance = 3f;
 
-        [Header("Progress Requirements")]
-        [SerializeField] private ProgressFlagRequirement[] progressRequirements;
-
         [Header("Inventory Grants")]
         [SerializeField] private InventoryGrantEntry[] grants;
 
-        [Header("Progress Results")]
-        [SerializeField] private ProgressFlagMutation[] successProgressMutations;
-
         [Header("Behavior")]
         [SerializeField] private string source = "inventory_grant";
-        [SerializeField] private bool disableAfterSuccessfulUse;
 
         public float MaxInteractDistance => maxInteractDistance;
-
-        private bool _used;
 
         public bool CanInteract(ulong clientId, NetworkObject actor, out string reason)
         {
             reason = string.Empty;
 
-            if (_used && disableAfterSuccessfulUse)
-            {
-                reason = "Already used.";
-                return false;
-            }
-
             if (InventoryService.Instance == null)
             {
-                reason = "Inventory service is unavailable.";
+                reason = "InventoryService is unavailable.";
                 return false;
             }
 
-            if (ProgressFlagService.Instance != null)
+            if (grants == null || grants.Length == 0)
             {
-                ServerActionResult requirements =
-                    ProgressFlagService.Instance.EvaluateRequirementsForClient(
-                        clientId,
-                        progressRequirements);
+                reason = "No inventory grants are configured.";
+                return false;
+            }
 
-                if (!requirements.Success)
+            for (int i = 0; i < grants.Length; i++)
+            {
+                if (string.IsNullOrWhiteSpace(grants[i].ItemDefinitionId))
                 {
-                    reason = requirements.Message;
+                    reason = $"Grant at index {i} has no item definition ID.";
                     return false;
                 }
             }
@@ -79,7 +71,6 @@ namespace ROC.Networking.Interactions
             for (int i = 0; i < grants.Length; i++)
             {
                 InventoryGrantEntry grant = grants[i];
-
                 ServerActionResult result = InventoryService.Instance.GrantItemForClient(
                     clientId,
                     grant.ItemDefinitionId,
@@ -92,21 +83,6 @@ namespace ROC.Networking.Interactions
                     return;
                 }
             }
-
-            if (ProgressFlagService.Instance != null)
-            {
-                ServerActionResult mutations =
-                    ProgressFlagService.Instance.ApplyMutationsForClient(
-                        clientId,
-                        successProgressMutations);
-
-                if (!mutations.Success)
-                {
-                    Debug.LogWarning($"[InventoryGrantInteractable] Progress mutation failed: {mutations}", this);
-                }
-            }
-
-            _used = true;
         }
     }
 }
