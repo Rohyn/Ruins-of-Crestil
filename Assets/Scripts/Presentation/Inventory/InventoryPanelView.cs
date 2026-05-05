@@ -30,6 +30,9 @@ namespace ROC.Presentation.Inventory
         [SerializeField] private string emptyEquippedText = "Nothing equipped.";
         [SerializeField] private string emptyBagText = "Bags empty.";
 
+        [Header("Debug")]
+        [SerializeField] private bool verboseLogging;
+
         private readonly List<GameObject> _spawnedRows = new();
 
         private ClientInventoryState _boundInventory;
@@ -46,7 +49,10 @@ namespace ROC.Presentation.Inventory
                 titleLabel.text = titleText;
             }
 
-            Hide();
+            ValidateReferences();
+
+            // Do not call Hide() here.
+            // This component may wake during the first Show() call if its GameObject starts inactive.
         }
 
         public void Show()
@@ -54,6 +60,16 @@ namespace ROC.Presentation.Inventory
             if (panelRoot != null)
             {
                 panelRoot.SetActive(true);
+            }
+
+            if (equippedListContainer != null)
+            {
+                equippedListContainer.gameObject.SetActive(true);
+            }
+
+            if (bagListContainer != null)
+            {
+                bagListContainer.gameObject.SetActive(true);
             }
         }
 
@@ -73,6 +89,18 @@ namespace ROC.Presentation.Inventory
         public void RenderInventory(ClientInventoryState inventory)
         {
             _boundInventory = inventory;
+
+            ValidateReferences();
+
+            if (equippedListContainer != null)
+            {
+                equippedListContainer.gameObject.SetActive(true);
+            }
+
+            if (bagListContainer != null)
+            {
+                bagListContainer.gameObject.SetActive(true);
+            }
 
             ClearSpawnedRows();
 
@@ -99,6 +127,11 @@ namespace ROC.Presentation.Inventory
             SetEmptyLabel(bagEmptyLabel, bagRows <= 0, emptyBagText);
 
             ForceRebuild();
+
+            if (verboseLogging)
+            {
+                Debug.Log($"[InventoryPanelView] Rendered inventory. EquippedRows={equippedRows}, BagRows={bagRows}");
+            }
         }
 
         private int BuildList(
@@ -112,6 +145,8 @@ namespace ROC.Presentation.Inventory
                 SetEmptyLabel(emptyLabel, true, emptyText);
                 return 0;
             }
+
+            container.gameObject.SetActive(true);
 
             int entryCount = _boundInventory.GetEntryCount(location);
             int rowsBuilt = 0;
@@ -217,6 +252,7 @@ namespace ROC.Presentation.Inventory
             if (panelRoot != null)
             {
                 RectTransform rootRect = panelRoot.transform as RectTransform;
+
                 if (rootRect != null)
                 {
                     LayoutRebuilder.ForceRebuildLayoutImmediate(rootRect);
@@ -233,6 +269,45 @@ namespace ROC.Presentation.Inventory
             if (rect != null)
             {
                 LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
+            }
+        }
+
+        private void ValidateReferences()
+        {
+            ValidateContainer("Equipped", equippedListContainer, equippedEmptyLabel);
+            ValidateContainer("Bag", bagListContainer, bagEmptyLabel);
+        }
+
+        private void ValidateContainer(string label, Transform container, TMP_Text emptyLabel)
+        {
+            if (container == null)
+            {
+                Debug.LogWarning($"[InventoryPanelView] {label} List Container is not assigned.", this);
+                return;
+            }
+
+            if (emptyLabel == null)
+            {
+                return;
+            }
+
+            Transform emptyTransform = emptyLabel.transform;
+
+            if (container == emptyTransform)
+            {
+                Debug.LogError(
+                    $"[InventoryPanelView] {label} List Container is assigned to the empty label. " +
+                    "Use a separate always-active row container instead.",
+                    this);
+                return;
+            }
+
+            if (container.IsChildOf(emptyTransform))
+            {
+                Debug.LogError(
+                    $"[InventoryPanelView] {label} List Container is under the empty label. " +
+                    "When the empty label is hidden, rows will be hidden too.",
+                    this);
             }
         }
     }

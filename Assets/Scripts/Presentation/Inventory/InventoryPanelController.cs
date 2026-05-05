@@ -22,7 +22,10 @@ namespace ROC.Presentation.Inventory
         private void Awake()
         {
             ResolveReferences();
-            panelView?.Hide();
+
+            // Do not hide here.
+            // If this object starts inactive, Awake may run during the first Show() call.
+            // Hiding here causes the "second click required" behavior.
         }
 
         private void OnEnable()
@@ -36,9 +39,9 @@ namespace ROC.Presentation.Inventory
                 BindInventory(ClientInventoryState.Local);
             }
 
-            if (_wantsVisible)
+            if (_wantsVisible && _boundInventory != null)
             {
-                Show();
+                panelView?.RenderInventory(_boundInventory);
             }
         }
 

@@ -38,39 +38,43 @@ namespace ROC.Presentation.UI
         [Header("Startup")]
         [SerializeField] private GameplayMenuTab defaultTab = GameplayMenuTab.Inventory;
 
+        [Header("Debug")]
+        [SerializeField] private bool verboseLogging;
+
         private GameplayMenuTab _lastViewedTab;
         private bool _hasOpenedBefore;
-        private Coroutine _deferredShowCoroutine;
+        private Coroutine _openRoutine;
 
         private void Awake()
         {
             _lastViewedTab = defaultTab;
+
             ResolveReferences();
 
             inventoryButton?.onClick.AddListener(ShowInventoryTab);
             journalButton?.onClick.AddListener(ShowJournalTab);
             mapButton?.onClick.AddListener(ShowMapTab);
             socialButton?.onClick.AddListener(ShowSocialTab);
-            closeButton?.onClick.AddListener(CloseMenu);
+            closeButton?.onClick.AddListener(RequestCloseMenu);
 
-            ApplyMode(PlayerLookController.Local != null
-                ? PlayerLookController.Local.CurrentCursorMode
-                : PlayerLookController.CursorModeState.TemporaryFreeCursor);
+            CloseMenuVisualOnly();
         }
 
         private void OnEnable()
         {
-            PlayerLookController.LocalCursorModeChanged += ApplyMode;
+            PlayerLookController.LocalGameplayMenuOpened += HandleGameplayMenuOpened;
+            PlayerLookController.LocalGameplayMenuClosed += HandleGameplayMenuClosed;
         }
 
         private void OnDisable()
         {
-            PlayerLookController.LocalCursorModeChanged -= ApplyMode;
+            PlayerLookController.LocalGameplayMenuOpened -= HandleGameplayMenuOpened;
+            PlayerLookController.LocalGameplayMenuClosed -= HandleGameplayMenuClosed;
 
-            if (_deferredShowCoroutine != null)
+            if (_openRoutine != null)
             {
-                StopCoroutine(_deferredShowCoroutine);
-                _deferredShowCoroutine = null;
+                StopCoroutine(_openRoutine);
+                _openRoutine = null;
             }
         }
 
@@ -87,44 +91,39 @@ namespace ROC.Presentation.UI
             }
         }
 
-        private void ApplyMode(PlayerLookController.CursorModeState mode)
+        private void HandleGameplayMenuOpened()
         {
             ResolveReferences();
 
-            bool shouldShow = mode == PlayerLookController.CursorModeState.MenuCursor;
+            GameplayMenuTab tabToShow = _hasOpenedBefore ? _lastViewedTab : defaultTab;
+            _hasOpenedBefore = true;
 
             if (menuRoot != null)
             {
-                menuRoot.SetActive(shouldShow);
+                menuRoot.SetActive(true);
             }
 
-            if (_deferredShowCoroutine != null)
+            if (_openRoutine != null)
             {
-                StopCoroutine(_deferredShowCoroutine);
-                _deferredShowCoroutine = null;
+                StopCoroutine(_openRoutine);
             }
 
-            if (shouldShow)
-            {
-                GameplayMenuTab tabToShow = _hasOpenedBefore ? _lastViewedTab : defaultTab;
-                _hasOpenedBefore = true;
-
-                _deferredShowCoroutine = StartCoroutine(ShowTabDeferred(tabToShow));
-            }
-            else
-            {
-                HideAllPanels();
-            }
+            _openRoutine = StartCoroutine(OpenMenuRoutine(tabToShow));
         }
 
-        private IEnumerator ShowTabDeferred(GameplayMenuTab tab)
+        private IEnumerator OpenMenuRoutine(GameplayMenuTab tabToShow)
         {
+            // One-frame defer lets inactive child panel components finish Awake/OnEnable
+            // after GameplayMenuRoot is activated.
             yield return null;
 
-            ResolveReferences();
-            ShowTab(tab);
+            ShowTab(tabToShow);
+            _openRoutine = null;
+        }
 
-            _deferredShowCoroutine = null;
+        private void HandleGameplayMenuClosed()
+        {
+            CloseMenuVisualOnly();
         }
 
         public void ShowInventoryTab()
@@ -171,7 +170,6 @@ namespace ROC.Presentation.UI
                     {
                         journalPanel.SetActive(true);
                     }
-
                     break;
 
                 case GameplayMenuTab.Map:
@@ -179,7 +177,6 @@ namespace ROC.Presentation.UI
                     {
                         mapPanel.SetActive(true);
                     }
-
                     break;
 
                 case GameplayMenuTab.Social:
@@ -187,8 +184,12 @@ namespace ROC.Presentation.UI
                     {
                         socialPanel.SetActive(true);
                     }
-
                     break;
+            }
+
+            if (verboseLogging)
+            {
+                Debug.Log($"[GameplayMenuController] Showing tab: {tab}");
             }
         }
 
@@ -212,7 +213,23 @@ namespace ROC.Presentation.UI
             }
         }
 
-        private static void CloseMenu()
+        private void CloseMenuVisualOnly()
+        {
+            if (_openRoutine != null)
+            {
+                StopCoroutine(_openRoutine);
+                _openRoutine = null;
+            }
+
+            HideAllPanels();
+
+            if (menuRoot != null)
+            {
+                menuRoot.SetActive(false);
+            }
+        }
+
+        private static void RequestCloseMenu()
         {
             if (PlayerLookController.Local != null)
             {

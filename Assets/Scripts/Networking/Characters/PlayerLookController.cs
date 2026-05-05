@@ -18,7 +18,10 @@ namespace ROC.Networking.Characters
         }
 
         public static PlayerLookController Local { get; private set; }
+
         public static event Action<CursorModeState> LocalCursorModeChanged;
+        public static event Action LocalGameplayMenuOpened;
+        public static event Action LocalGameplayMenuClosed;
 
         [Header("Required References")]
         [SerializeField] private Transform cameraPivot;
@@ -83,6 +86,8 @@ namespace ROC.Networking.Characters
                 return;
             }
 
+            CursorModeState previousMode = CurrentCursorMode;
+
             if (Local == this)
             {
                 Local = null;
@@ -92,6 +97,11 @@ namespace ROC.Networking.Characters
             Cursor.visible = true;
 
             LocalCursorModeChanged?.Invoke(CursorModeState.TemporaryFreeCursor);
+
+            if (previousMode == CursorModeState.MenuCursor)
+            {
+                LocalGameplayMenuClosed?.Invoke();
+            }
         }
 
         private void Update()
@@ -138,14 +148,29 @@ namespace ROC.Networking.Characters
                 return;
             }
 
+            CursorModeState previousMode = CurrentCursorMode;
+
             CurrentCursorMode = newMode;
             ApplyCursorState(newMode);
 
             CursorModeChanged?.Invoke(CurrentCursorMode);
 
-            if (IsOwner)
+            if (!IsOwner)
             {
-                LocalCursorModeChanged?.Invoke(CurrentCursorMode);
+                return;
+            }
+
+            LocalCursorModeChanged?.Invoke(CurrentCursorMode);
+
+            if (previousMode != CursorModeState.MenuCursor &&
+                CurrentCursorMode == CursorModeState.MenuCursor)
+            {
+                LocalGameplayMenuOpened?.Invoke();
+            }
+            else if (previousMode == CursorModeState.MenuCursor &&
+                     CurrentCursorMode != CursorModeState.MenuCursor)
+            {
+                LocalGameplayMenuClosed?.Invoke();
             }
         }
 
