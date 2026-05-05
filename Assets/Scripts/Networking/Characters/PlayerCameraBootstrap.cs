@@ -65,7 +65,7 @@ namespace ROC.Networking.Characters
                 return;
             }
 
-            UnityEngine.Camera cameraToUse = Camera.main;
+            UnityEngine.Camera cameraToUse = UnityEngine.Camera.main;
 
             if (cameraToUse == null)
             {
@@ -78,9 +78,9 @@ namespace ROC.Networking.Characters
                 GameObject cameraObject = new("Local Player Camera");
                 cameraObject.tag = "MainCamera";
 
-                cameraToUse = cameraObject.AddComponent<Camera>();
+                cameraToUse = cameraObject.AddComponent<UnityEngine.Camera>();
 
-                if (FindFirstObjectByType<AudioListener>() == null)
+                if (FindAnyObjectByType<AudioListener>() == null)
                 {
                     cameraObject.AddComponent<AudioListener>();
                 }
@@ -172,7 +172,7 @@ namespace ROC.Networking.Characters
                 return;
             }
 
-            if (FindFirstObjectByType<AudioListener>() != null)
+            if (FindAnyObjectByType<AudioListener>() != null)
             {
                 return;
             }

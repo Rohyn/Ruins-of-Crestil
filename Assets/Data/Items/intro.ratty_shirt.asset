@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1b5e6acb3656f748bb1c57b2049b541, type: 3}
+  m_Name: intro.ratty_shirt
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Game.Inventory.ItemDefinition
+  itemId: intro.ratty_shirt
+  displayName: a ratty old shirt
+  description: Barely serviceable as clothing.
+  baseValue: 0
+  isStackable: 0
+  maxStack: 1
+  isEquippable: 1
+  tags:
+  - clothing
+  - intro
+  defaultAppearanceId: 

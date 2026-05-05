@@ -137,7 +137,7 @@ namespace ROC.Networking.World
 
         private IEnumerator LoadInstanceCoroutine(WorldInstance instance)
         {
-            HashSet<int> loadedBefore = CaptureLoadedSceneHandles();
+            HashSet<ulong> loadedBefore = CaptureLoadedSceneHandles();
 
             AsyncOperation operation = SceneManager.LoadSceneAsync(instance.UnitySceneName, LoadSceneMode.Additive);
 
@@ -279,26 +279,27 @@ namespace ROC.Networking.World
             Debug.Log($"[WorldInstanceManager] Instance unloaded: {instance.InstanceId}");
         }
 
-        private static HashSet<int> CaptureLoadedSceneHandles()
+        private static HashSet<ulong> CaptureLoadedSceneHandles()
         {
-            var handles = new HashSet<int>();
+            var handles = new HashSet<ulong>();
 
             for (int i = 0; i < SceneManager.sceneCount; i++)
             {
                 Scene scene = SceneManager.GetSceneAt(i);
-                handles.Add(scene.handle);
+                handles.Add(scene.handle.GetRawData());
             }
 
             return handles;
         }
 
-        private static Scene FindNewlyLoadedScene(HashSet<int> existingHandles, string unitySceneName)
+        private static Scene FindNewlyLoadedScene(HashSet<ulong> existingHandles, string unitySceneName)
         {
             for (int i = 0; i < SceneManager.sceneCount; i++)
             {
                 Scene scene = SceneManager.GetSceneAt(i);
 
-                if (scene.name == unitySceneName && !existingHandles.Contains(scene.handle))
+                if (scene.name == unitySceneName &&
+                    !existingHandles.Contains(scene.handle.GetRawData()))
                 {
                     return scene;
                 }

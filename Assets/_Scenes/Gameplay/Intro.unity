@@ -925,6 +925,37 @@ MonoBehaviour:
   networkPrefab: {fileID: 1122965286393572806, guid: 7bdac9087a0f0f74499274fcbf3fb8fd, type: 3}
   stableObjectId: intro.aidan
   applyMarkerScale: 1
+--- !u!1 &1474303122
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1474303123}
+  m_Layer: 0
+  m_Name: ExitAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1474303123
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1474303122}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.8, y: -0.8, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4196017020818187}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1492792667
 GameObject:
   m_ObjectHideFlags: 0
@@ -973,6 +1004,37 @@ MonoBehaviour:
   networkPrefab: {fileID: 7082214295607627452, guid: a51409e1daca79c488a2899edec1a470, type: 3}
   stableObjectId: intro.wardrobe
   applyMarkerScale: 1
+--- !u!1 &1586871677
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1586871678}
+  m_Layer: 0
+  m_Name: RestAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1586871678
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1586871677}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0, y: 1.5, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4196017020818187}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1639677482
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1449,7 +1511,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8101813970233080589, guid: 598592cdd0428cb4a93fd344133425cf, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8519063362123801405, guid: 598592cdd0428cb4a93fd344133425cf, type: 3}
       propertyPath: GlobalObjectIdHash
@@ -1461,7 +1523,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 108072462010117505, guid: 598592cdd0428cb4a93fd344133425cf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1586871678}
+    - targetCorrespondingSourceObject: {fileID: 108072462010117505, guid: 598592cdd0428cb4a93fd344133425cf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1474303123}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 598592cdd0428cb4a93fd344133425cf, type: 3}
 --- !u!1001 &8950466089247344041

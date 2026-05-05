@@ -4,6 +4,7 @@ using ROC.Game.Common;
 using ROC.Networking.Characters;
 using ROC.Networking.World;
 using ROC.Networking.Sessions;
+using ROC.Game.Conditions;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -141,6 +142,7 @@ namespace ROC.Game.Sessions
             PersistentCharacterRecord character,
             WorldLocation location)
         {
+            AnchoringService.Instance?.CleanupClientForWorldTransfer(clientId);
             SaveActiveClientLocation(clientId);
             DespawnActiveAvatar(clientId);
 
@@ -317,6 +319,7 @@ namespace ROC.Game.Sessions
 
         private void HandleClientDisconnected(ulong clientId)
         {
+            AnchoringService.Instance?.CleanupClientForDisconnect(clientId);
             SaveActiveClientLocation(clientId);
             DespawnActiveAvatar(clientId);
 
@@ -357,6 +360,7 @@ namespace ROC.Game.Sessions
 
         private void DespawnActiveAvatar(ulong clientId)
         {
+            AnchoringService.Instance?.ForceReleaseAnchorWithoutExitSnap(clientId);
             if (!_activeSessions.TryGetValue(clientId, out ActivePlayerSession session))
             {
                 return;

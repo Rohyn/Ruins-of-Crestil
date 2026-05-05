@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4184478024182994769}
   - component: {fileID: 7652587750870968432}
   - component: {fileID: 1122965286393572806}
+  - component: {fileID: 5640706190523051181}
   - component: {fileID: 2303485086720527389}
   m_Layer: 0
   m_Name: Aidan
@@ -129,7 +130,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1470458797
+  GlobalObjectIdHash: 3477285004
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -142,6 +143,19 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &5640706190523051181
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141498113693031435}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66d6ebe5e3eb96845bb6fb0da1488b4b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.World.NetworkInstanceObject
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!114 &2303485086720527389
 MonoBehaviour:
   m_ObjectHideFlags: 0

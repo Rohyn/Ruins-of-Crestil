@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ROC.Game.Common;
 using ROC.Networking.Characters;
 using ROC.Networking.Conditions;
+using ROC.Networking.Sessions;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -16,16 +17,14 @@ namespace ROC.Game.Conditions
         [SerializeField] private string defaultExitPrompt = "Release";
 
         [Header("Behavior")]
-        [Tooltip("If true, the server continuously keeps anchored players snapped to their anchor.")]
         [SerializeField] private bool enforceAnchorEveryFixedUpdate = true;
-
-        [Tooltip("If the anchored actor drifts farther than this squared distance, it is snapped back.")]
         [SerializeField, Min(0f)] private float anchorSnapToleranceSqr = 0.0001f;
 
         [Header("Debug")]
         [SerializeField] private bool verboseLogging;
 
         private readonly Dictionary<ulong, ActiveAnchorState> _activeAnchorsByClient = new();
+        private readonly List<ulong> _cleanupBuffer = new();
 
         private void Awake()
         {
@@ -58,10 +57,22 @@ namespace ROC.Game.Conditions
                 return;
             }
 
-            foreach (ActiveAnchorState state in _activeAnchorsByClient.Values)
+            _cleanupBuffer.Clear();
+
+            foreach (KeyValuePair<ulong, ActiveAnchorState> pair in _activeAnchorsByClient)
             {
-                if (state.ActorObject == null || state.Anchor == null)
+                ulong clientId = pair.Key;
+                ActiveAnchorState state = pair.Value;
+
+                if (state.ActorObject == null || !state.ActorObject.IsSpawned)
                 {
+                    _cleanupBuffer.Add(clientId);
+                    continue;
+                }
+
+                if (state.Anchor == null)
+                {
+                    _cleanupBuffer.Add(clientId);
                     continue;
                 }
 
@@ -72,6 +83,11 @@ namespace ROC.Game.Conditions
                 {
                     SnapActorTo(state.ActorObject, state.Anchor, resetMotor: true);
                 }
+            }
+
+            for (int i = 0; i < _cleanupBuffer.Count; i++)
+            {
+                ForceReleaseAnchorWithoutExitSnap(_cleanupBuffer[i]);
             }
         }
 
@@ -114,6 +130,9 @@ namespace ROC.Game.Conditions
                 return ServerActionResult.Ok("Client is already anchored.");
             }
 
+            string characterId = string.Empty;
+            PlayerSessionRegistry.Instance?.TryGetCharacterId(clientId, out characterId);
+
             if (!string.IsNullOrWhiteSpace(conditionIdToApply))
             {
                 if (ConditionService.Instance == null)
@@ -142,6 +161,8 @@ namespace ROC.Game.Conditions
 
             var state = new ActiveAnchorState
             {
+                ClientId = clientId,
+                CharacterId = characterId ?? string.Empty,
                 ActorObject = actor,
                 Anchor = anchor,
                 ExitAnchor = resolvedExitAnchor,
@@ -169,56 +190,47 @@ namespace ROC.Game.Conditions
 
         public ServerActionResult ReleaseAnchor(ulong clientId)
         {
-            if (!RequireServer(out ServerActionResult serverResult))
-            {
-                return serverResult;
-            }
-
-            if (!_activeAnchorsByClient.TryGetValue(clientId, out ActiveAnchorState state))
-            {
-                return ServerActionResult.Fail(
-                    ServerActionErrorCode.InvalidState,
-                    "Client is not anchored.");
-            }
-
-            NetworkObject actor = state.ActorObject;
-
-            if (actor == null)
-            {
-                _activeAnchorsByClient.Remove(clientId);
-
-                return ServerActionResult.Fail(
-                    ServerActionErrorCode.InvalidState,
-                    "Anchored actor is missing.");
-            }
-
-            Transform exitAnchor = state.ExitAnchor != null ? state.ExitAnchor : actor.transform;
-
-            SnapActorTo(actor, exitAnchor, resetMotor: true);
-
-            if (!string.IsNullOrWhiteSpace(state.AppliedConditionId))
-            {
-                ConditionService.Instance?.RemoveConditionForClient(
-                    clientId,
-                    state.AppliedConditionId);
-            }
-
-            if (actor.TryGetComponent(out NetworkPlayerConditionState conditionState))
-            {
-                conditionState.SetAnchorPresentationServer(false, string.Empty);
-            }
-
-            _activeAnchorsByClient.Remove(clientId);
-
-            if (verboseLogging)
-            {
-                Debug.Log($"[AnchoringService] Client {clientId} released anchor.");
-            }
-
-            return ServerActionResult.Ok();
+            return ReleaseAnchorInternal(
+                clientId,
+                snapToExitAnchor: true,
+                clearPresentation: true,
+                reason: "release");
         }
 
         public ServerActionResult ForceReleaseAnchorWithoutExitSnap(ulong clientId)
+        {
+            return ReleaseAnchorInternal(
+                clientId,
+                snapToExitAnchor: false,
+                clearPresentation: true,
+                reason: "force-release");
+        }
+
+        public ServerActionResult CleanupClientForDisconnect(ulong clientId)
+        {
+            // For logout/disconnect, snap to the exit anchor so the saved location is safe.
+            return ReleaseAnchorInternal(
+                clientId,
+                snapToExitAnchor: true,
+                clearPresentation: true,
+                reason: "disconnect");
+        }
+
+        public ServerActionResult CleanupClientForWorldTransfer(ulong clientId)
+        {
+            // For scene transfer, do not snap to an old-scene exit anchor. The transfer spawn wins.
+            return ReleaseAnchorInternal(
+                clientId,
+                snapToExitAnchor: false,
+                clearPresentation: true,
+                reason: "world-transfer");
+        }
+
+        private ServerActionResult ReleaseAnchorInternal(
+            ulong clientId,
+            bool snapToExitAnchor,
+            bool clearPresentation,
+            string reason)
         {
             if (!RequireServer(out ServerActionResult serverResult))
             {
@@ -227,31 +239,71 @@ namespace ROC.Game.Conditions
 
             if (!_activeAnchorsByClient.TryGetValue(clientId, out ActiveAnchorState state))
             {
-                return ServerActionResult.Ok();
+                return ServerActionResult.Ok("Client is not anchored.");
             }
 
             NetworkObject actor = state.ActorObject;
 
-            if (!string.IsNullOrWhiteSpace(state.AppliedConditionId))
+            if (actor != null && actor.IsSpawned)
             {
-                ConditionService.Instance?.RemoveConditionForClient(
-                    clientId,
-                    state.AppliedConditionId);
+                if (snapToExitAnchor)
+                {
+                    Transform exitAnchor = state.ExitAnchor != null ? state.ExitAnchor : actor.transform;
+                    SnapActorTo(actor, exitAnchor, resetMotor: true);
+                }
+                else if (actor.TryGetComponent(out NetworkPlayerMotor motor))
+                {
+                    motor.ClearServerMotionState();
+                }
+
+                if (clearPresentation &&
+                    actor.TryGetComponent(out NetworkPlayerConditionState conditionState))
+                {
+                    conditionState.SetAnchorPresentationServer(false, string.Empty);
+                }
             }
 
-            if (actor != null && actor.TryGetComponent(out NetworkPlayerConditionState conditionState))
-            {
-                conditionState.SetAnchorPresentationServer(false, string.Empty);
-            }
+            RemoveAppliedCondition(clientId, state);
 
             _activeAnchorsByClient.Remove(clientId);
 
             if (verboseLogging)
             {
-                Debug.Log($"[AnchoringService] Client {clientId} force-released anchor.");
+                Debug.Log($"[AnchoringService] Client {clientId} anchor cleanup completed. Reason={reason}");
             }
 
             return ServerActionResult.Ok();
+        }
+
+        private static void RemoveAppliedCondition(ulong clientId, ActiveAnchorState state)
+        {
+            if (state == null || string.IsNullOrWhiteSpace(state.AppliedConditionId))
+            {
+                return;
+            }
+
+            ConditionService conditionService = ConditionService.Instance;
+
+            if (conditionService == null)
+            {
+                return;
+            }
+
+            ServerActionResult result = conditionService.RemoveConditionForClient(
+                clientId,
+                state.AppliedConditionId);
+
+            if (result.Success)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(state.CharacterId))
+            {
+                conditionService.RemoveConditionForCharacter(
+                    state.CharacterId,
+                    state.AppliedConditionId);
+            }
         }
 
         private static void SnapActorTo(
@@ -304,6 +356,8 @@ namespace ROC.Game.Conditions
 
         private sealed class ActiveAnchorState
         {
+            public ulong ClientId;
+            public string CharacterId;
             public NetworkObject ActorObject;
             public Transform Anchor;
             public Transform ExitAnchor;

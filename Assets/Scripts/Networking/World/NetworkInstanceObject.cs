@@ -60,12 +60,14 @@ namespace ROC.Networking.World
             }
         }
 
-        private void OnDestroy()
+        public override void OnDestroy()
         {
             if (_networkObject != null)
             {
                 _networkObject.CheckObjectVisibility = null;
             }
+
+            base.OnDestroy();
         }
 
         public void InitializeServer(string instanceId, string stableObjectId)

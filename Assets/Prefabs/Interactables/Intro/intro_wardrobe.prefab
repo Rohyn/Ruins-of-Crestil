@@ -14,7 +14,9 @@ GameObject:
   - component: {fileID: 5510026356526034922}
   - component: {fileID: 8796285215855123542}
   - component: {fileID: 7082214295607627452}
+  - component: {fileID: 8557355030808938200}
   - component: {fileID: 2263475124093953845}
+  - component: {fileID: 7759554794204238085}
   m_Layer: 0
   m_Name: intro_wardrobe
   m_TagString: Untagged
@@ -165,6 +167,19 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &8557355030808938200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301574452089074981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66d6ebe5e3eb96845bb6fb0da1488b4b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.World.NetworkInstanceObject
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!114 &2263475124093953845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -185,6 +200,33 @@ MonoBehaviour:
   - {fileID: 3335588304908736492}
   interactionFoci:
   - {fileID: 503550220877790409}
+--- !u!114 &7759554794204238085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301574452089074981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0592c5c5a3065b646912679cb417cd68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Interactions.InventoryGrantInteractable
+  ShowTopMostFoldoutHeaderGroup: 1
+  maxInteractDistance: 3
+  progressRequirements: []
+  grants:
+  - itemDefinitionId: intro.ratty_shirt
+    quantity: 1
+  - itemDefinitionId: intro.ratty_pants
+    quantity: 1
+  successProgressMutations:
+  - mutationKind: 0
+    flagIdOrPrefix: intro.received_clothes
+    lifetime: 0
+    source: intro.wardrobe
+  source: intro.wardrobe
+  disableAfterSuccessfulUse: 1
 --- !u!1 &2579815400782755227
 GameObject:
   m_ObjectHideFlags: 0

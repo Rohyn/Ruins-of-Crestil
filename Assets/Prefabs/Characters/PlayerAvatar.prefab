@@ -54,6 +54,7 @@ GameObject:
   - component: {fileID: 5075870194697270792}
   - component: {fileID: 1679443108806831343}
   - component: {fileID: 5460775638480095909}
+  - component: {fileID: 896864954013468670}
   m_Layer: 0
   m_Name: PlayerAvatar
   m_TagString: Untagged
@@ -336,6 +337,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Characters.NetworkPlayerMotor
   ShowTopMostFoldoutHeaderGroup: 1
   lookController: {fileID: 9191286051877628742}
+  conditionState: {fileID: 896864954013468670}
   walkSpeed: 3
   runMultiplier: 1.55
   clampDiagonalMovement: 1
@@ -414,5 +416,19 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   interactionSelector: {fileID: 1679443108806831343}
   lookController: {fileID: 9191286051877628742}
+  conditionState: {fileID: 896864954013468670}
   interactKey: 19
   verboseLogging: 1
+--- !u!114 &896864954013468670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8219589089771029425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a85db1856e2f11d48b4adbfbc3eadb0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.Conditions.NetworkPlayerConditionState
+  ShowTopMostFoldoutHeaderGroup: 1

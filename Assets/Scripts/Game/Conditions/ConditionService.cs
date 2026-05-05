@@ -83,6 +83,25 @@ namespace ROC.Game.Conditions
             return ApplyCondition(clientId, characterId, conditionId, sourceType, sourceId);
         }
 
+        public ServerActionResult RemoveConditionForCharacter(
+            string characterId,
+            string conditionId)
+        {
+            if (!RequireServer(out ServerActionResult serverResult))
+            {
+                return serverResult;
+            }
+
+            if (string.IsNullOrWhiteSpace(characterId))
+            {
+                return ServerActionResult.Fail(
+                    ServerActionErrorCode.InvalidRequest,
+                    "Cannot remove condition because characterId is empty.");
+            }
+
+            return RemoveCondition(ulong.MaxValue, characterId, conditionId);
+        }
+
         public ServerActionResult RemoveConditionForClient(
             ulong clientId,
             string conditionId)
@@ -356,6 +375,11 @@ namespace ROC.Game.Conditions
 
         private void RefreshAvatarConditionState(ulong clientId, string characterId)
         {
+            if (clientId == ulong.MaxValue)
+            {
+                return;
+            }
+
             PlayerSessionRegistry registry = PlayerSessionRegistry.Instance;
 
             if (registry == null ||

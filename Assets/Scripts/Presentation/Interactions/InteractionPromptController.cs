@@ -32,7 +32,7 @@ namespace ROC.Presentation.Interactions
         {
             if (promptView == null)
             {
-                promptView = FindFirstObjectByType<InteractionPromptView>();
+                promptView = FindAnyObjectByType<InteractionPromptView>();
             }
 
             if (promptView != null)

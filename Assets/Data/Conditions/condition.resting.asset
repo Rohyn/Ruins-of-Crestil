@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45c1ddc15b347064d9eb3029fdc81473, type: 3}
+  m_Name: condition.resting
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Game.Conditions.ConditionDefinition
+  conditionId: condition.resting
+  displayName: Resting
+  description: 
+  polarity: 1
+  displayCategory: 2
+  tags: []
+  durationMode: 0
+  baseDurationSeconds: 0
+  effects:
+  - effectType: 0
+    magnitude: 0
+  - effectType: 1
+    magnitude: 0
+  - effectType: 2
+    magnitude: 0
+  - effectType: 3
+    magnitude: 0

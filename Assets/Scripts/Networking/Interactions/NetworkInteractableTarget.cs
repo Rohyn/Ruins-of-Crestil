@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using ROC.Networking.World;
 
 namespace ROC.Networking.Interactions
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NetworkObject))]
+    [RequireComponent(typeof(ROC.Networking.World.NetworkInstanceObject))]
     public sealed class NetworkInteractableTarget : NetworkBehaviour
     {
         [Header("Display")]
