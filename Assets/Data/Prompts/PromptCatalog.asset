@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bdb2c4bd1ebd9d489d709d94d51b1d5, type: 3}
+  m_Name: PromptCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::ROC.Presentation.Prompts.PromptCatalog
+  prompts:
+  - {fileID: 11400000, guid: ce730361c32c3784a96fb58c599b09d7, type: 2}
+  - {fileID: 11400000, guid: 93189e5a89fa9dc45b74b74b634931ec, type: 2}
+  - {fileID: 11400000, guid: 8a5eb40746e7a094c82cdbf5efa3922a, type: 2}
+  - {fileID: 11400000, guid: bd151d6bb94e82d4ea26d0f9fa1c730d, type: 2}
+  - {fileID: 11400000, guid: 76d04bec21d41484797066d1f84eda57, type: 2}

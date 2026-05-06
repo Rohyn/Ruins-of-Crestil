@@ -9,7 +9,7 @@ namespace ROC.Networking.Interactions.Data
     /// </summary>
     [CreateAssetMenu(
         fileName = "InteractionRuleSet",
-        menuName = "ROC/Interactions/Rules/Rule Set")]
+        menuName = "ROC/Rules/Rule Set")]
     public sealed class InteractionRuleSetDefinition : ScriptableObject
     {
         [Header("Evaluation")]

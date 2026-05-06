@@ -2,7 +2,7 @@ using ROC.Game.Common;
 using ROC.Game.Inventory;
 using ROC.Networking.Interactions.Data;
 using ROC.Networking.Inventory;
-using ROC.Networking.Interactions.Rules;
+using ROC.Networking.Rules;
 using UnityEngine;
 
 namespace ROC.Networking.Interactions.Actions
