@@ -17,5 +17,5 @@ MonoBehaviour:
   - enabled: 1
     rule: {fileID: 11400000, guid: 8520de070ae25504eb3c684a30cc08ac, type: 2}
   - enabled: 1
-    rule: {fileID: 11400000, guid: 0b60a8847821dcb4e9c728bfc96f77c7, type: 2}
+    rule: {fileID: 11400000, guid: 618325a59f1ab124d9973785b32abeb3, type: 2}
   verboseLogging: 1

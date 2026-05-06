@@ -75,16 +75,6 @@ namespace ROC.Networking.Sessions
             SelectCharacterServerRpc(new FixedString64Bytes(characterId));
         }
 
-        public void RequestCompleteIntroAndEnterSharedWorld()
-        {
-            if (!IsOwner)
-            {
-                return;
-            }
-
-            CompleteIntroServerRpc();
-        }
-
         [ServerRpc]
         private void RequestCharacterListServerRpc(ServerRpcParams serverRpcParams = default)
         {
@@ -186,34 +176,6 @@ namespace ROC.Networking.Sessions
                 return;
             }
             sessionManager.EnterGame(clientId, character);
-        }
-
-        [ServerRpc]
-        private void CompleteIntroServerRpc(ServerRpcParams serverRpcParams = default)
-        {
-            ulong clientId = serverRpcParams.Receive.SenderClientId;
-
-            if (clientId != OwnerClientId)
-            {
-                SendStatusToClient(clientId, "Rejected intro completion: ownership mismatch.");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(_selectedCharacterId))
-            {
-                SendStatusToClient(clientId, "No selected character to complete intro for.");
-                return;
-            }
-
-            GameSessionManager sessionManager = GameSessionManager.Instance;
-            if (sessionManager == null)
-            {
-                SendStatusToClient(clientId, "Server missing GameSessionManager.");
-                return;
-            }
-
-            SendStatusToClient(clientId, "Intro complete. Entering the shared world...");
-            sessionManager.CompleteIntroAndEnterSharedWorld(clientId, _selectedCharacterId);
         }
 
         [ClientRpc]

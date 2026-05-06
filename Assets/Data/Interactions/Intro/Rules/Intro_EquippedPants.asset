@@ -15,9 +15,9 @@ MonoBehaviour:
   failureReasonId: 
   userMessageId: 
   failureDebugMessage: 
-  enableClientPreview: 0
-  verboseLogging: 0
+  enableClientPreview: 1
+  verboseLogging: 1
   requirementMode: 0
-  itemDefinitionId: 
+  itemDefinitionId: intro.ratty_pants
   minimumQuantity: 1
-  locationMode: 0
+  locationMode: 2

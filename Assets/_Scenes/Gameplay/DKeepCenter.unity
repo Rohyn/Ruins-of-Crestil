@@ -323,8 +323,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1952416541}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &448309919
@@ -338,7 +337,7 @@ GameObject:
   - component: {fileID: 448309920}
   - component: {fileID: 448309921}
   m_Layer: 0
-  m_Name: IntroSpawnPoint
+  m_Name: DKeepIntroArrivalSpawnPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -373,6 +372,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.World.NetworkSpawnPoint
   sceneId: dkeep_center
   spawnPointId: intro_arrival
+  tags: []
+  priority: 0
+  useRotation: 1
+  arrivalProfile: {fileID: 0}
 --- !u!1001 &779801846
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1649,51 +1652,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 7611803102043902919, guid: 3ea7da3a1a1391040bf210a4b2ad342a, type: 3}
---- !u!1 &1952416540
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1952416541}
-  - component: {fileID: 1952416542}
-  m_Layer: 0
-  m_Name: PlayerSpawnPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1952416541
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1952416540}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 505, y: 10, z: 263}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 390791732}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1952416542
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1952416540}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e36a31f784f91541b01ea0d44efc107, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ROC.Networking.World.PlayerSpawnPoint
-  kind: 1
 --- !u!1001 &1962544816
 PrefabInstance:
   m_ObjectHideFlags: 0
